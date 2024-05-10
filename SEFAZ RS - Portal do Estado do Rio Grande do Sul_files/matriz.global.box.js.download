@@ -1,0 +1,349 @@
+jQuery(function ($)
+{
+    //matriz box é baseado em pines notify
+    //documentação: http://pinesframework.org/pnotify
+    $.pnotify.defaults.closer_hover = false;
+    $.pnotify.defaults.hide = true;
+    $.pnotify.defaults.delay = 5000;
+    $.pnotify.defaults.history = false;
+    $.pnotify.defaults.sticker = false;
+    matriz.box = {};
+    //configs auxiliares
+    matriz.box.config = {};
+    matriz.box.config.confirm = function (selector, eventtype, message, callback) {
+        $(selector).each(function () {
+            element = $(this);
+            callback = matriz.box.callback(element, callback);
+            element.on(eventtype, function () {
+                matriz.box.obtrusive.confirm(message, callback);
+                return false;
+            });
+        });
+    };
+
+    matriz.box.notifications = {};
+    matriz.box.notifications.type = null;
+    matriz.box.notifications.mensagem = null;
+    matriz.box.notifications.caller = null;
+    matriz.box.notifications.exists = function (mensagem, type) {
+        var caller = arguments.callee.caller;
+
+        try {
+            var loop = 10;
+            while (caller.caller !== null && loop-- >= 0) {
+                caller = caller.caller;
+            }
+        } catch (e) {}
+
+        if ($("#notificacoes > div").length
+                && type === matriz.box.notifications.type
+                && mensagem === matriz.box.notifications.mensagem
+                && caller === matriz.box.notifications.caller) {
+            matriz.box.notifications.shake();
+            return true;
+        } else {
+            matriz.box.notifications.type = type;
+            matriz.box.notifications.mensagem = mensagem;
+            matriz.box.notifications.caller = caller;
+            matriz.box.notifications.remove();
+            return false;
+        }
+    };
+    matriz.box.notifications.shake = function () {
+        $("#notificacoes").effect("shake", {times: 4}, 1000);
+    };
+    matriz.box.notifications.remove = function () {
+        $("#notificacoes").empty();
+    };
+    matriz.box.notifications.append = function (pnotify) {
+        var $pnotify = $(pnotify[0]);
+        $pnotify.css("width", "100%");
+        $pnotify.find(".ui-pnotify-icon").hide();
+        $pnotify.find(".ui-pnotify-text").addClass("clearfix");
+        $pnotify.appendTo("#notificacoes");
+    };
+
+    //box no estilo de notificação
+    matriz.box.notify = {};
+    matriz.box.notify.default = function (mensagem, type) {
+        matriz.box.notifications.remove();
+        $.pnotify({
+            text: mensagem,
+            type: type,
+            before_open: function (pnotify) {
+                matriz.box.notifications.append(pnotify);
+            }
+        });
+    };
+
+    matriz.box.notify.danger = function (mensagem) {
+        matriz.box.notify.default(mensagem, 'error');
+    };
+    matriz.box.notify.info = function (mensagem) {
+        matriz.box.notify.default(mensagem, 'info');
+    };
+    matriz.box.notify.success = function (mensagem) {
+        matriz.box.notify.default(mensagem, 'success');
+    };
+    matriz.box.notify.warning = function (mensagem) {
+        matriz.box.notify.default(mensagem, 'info');
+    };
+
+    matriz.box.image = {};
+    matriz.box.image.show = function (imagem, caption) {
+        var matrizBoxImage = '<div id="matrizBoxImage" class="modal fade"><div class="modal-dialog modal-lg"><div class="modal-content">';
+        matrizBoxImage += '<div class="modal-header"><button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>';
+        matrizBoxImage += '<h4 class="modal-title">' + caption + '</h4></div>';
+        matrizBoxImage += '<div class="modal-body"><img class="img-thumbnail" src="' + imagem + '" alt="" />';
+        matrizBoxImage += '</div></div></div></div>';
+        $("body").append(matrizBoxImage);
+        $('#matrizBoxImage').modal({backdrop: true});
+        $('#matrizBoxImage').on('shown.bs.modal', function () {
+            $('#matrizBoxImage').find("button.close").focus();
+        });
+        $('#matrizBoxImage').on('hidden.bs.modal', function () {
+            $(this).remove();
+        });
+    };
+
+    //backdrop para box obstrutivos
+    matriz.box.backdrop = {};
+    var modal_backdrop;
+    if (typeof info_box !== "undefined") {
+        info_box.pnotify_display();
+        return;
+    }
+    matriz.box.backdrop.show = function (pnotify) {
+        // Make a modal screen overlay.
+        if (modal_backdrop)
+            modal_backdrop.fadeIn("fast");
+        else
+            modal_backdrop = $("<div />", {
+                "class": "matriz-ui-alert-backdrop modal-backdrop fade in",
+                "css": {
+                    "display": "none",
+                    "position": "fixed",
+                    "top": "0",
+                    "bottom": "0",
+                    "right": "0",
+                    "left": "0"
+                }
+            }).appendTo("body").fadeIn("fast");
+    };
+    matriz.box.backdrop.hide = function () {
+        modal_backdrop.fadeOut("fast");
+    };
+    //botões para box obstrutivos
+    matriz.box.buttons = {};
+    matriz.box.buttons.alert = '<div class="matriz-ui-alert-buttons">\
+        <button data-matriz-action="confirm-close" type="button" class="btn btn-default btn-sm" style="background: none">\
+            <span class="fa fa-close"></span>\
+        </button>\
+    </div>';
+    matriz.box.buttons.confirm = '<div class="matriz-ui-alert-buttons">\
+        <button type="button" data-matriz-action="confirm-callback" class="btn btn-warning btn-sm">Continuar</button>\
+        <button type="button" data-matriz-action="confirm-close" class="btn btn-default btn-sm">Cancelar</button>\
+    </div>';
+
+    //callback para box obstrutivos
+    matriz.box.callback = function (element, callback) {
+        //caso o callback seja nulo, verifica se é um link e então tenta recuperar o href para utilizar como location destino
+        if (callback === null)
+        {
+            if (element.is("a") && element.attr("href").length > 0)
+            {
+                callback = function () {
+                    window.location.assign(element.attr("href"));
+                };
+            }
+        }
+        else if (jQuery.type(callback) === "string")
+        {
+            //caso o callback seja um string considera este como um location destino
+            callback = function () {
+                window.location.assign(callback);
+            };
+        }
+        return callback;
+    };
+
+//alert obstrutivo
+    matriz.box.obtrusive = {};
+    matriz.box.obtrusive.default = function (mensagem, callback, type) {
+        type = type || 'info';
+        matriz.box.notifications.remove();
+        $.pnotify({
+            text: mensagem + matriz.box.buttons.alert,
+            type: type,
+            after_open: function (pnotify) {
+                $(pnotify[0]).find("button[data-matriz-action='confirm-close']").focus();
+            },
+            before_open: function (pnotify) {
+                matriz.box.backdrop.show(pnotify);
+                matriz.box.notifications.append(pnotify);
+
+                $(pnotify[0]).find(".ui-pnotify-closer").hide();
+                $(pnotify[0]).find("button[data-matriz-action='confirm-close']").click(function () {
+                    pnotify.pnotify_remove();
+                    $(pnotify).remove();
+                    if (callback)
+                        callback();
+                });
+            },
+            before_close: function () {
+                matriz.box.backdrop.hide();
+            }
+        });
+    };
+    matriz.box.obtrusive.danger = function (mensagem, callback) {
+        matriz.box.obtrusive.default(mensagem, callback, "danger");
+    };
+    matriz.box.obtrusive.info = function (mensagem, callback) {
+        matriz.box.obtrusive.default(mensagem, callback, "info");
+    };
+    matriz.box.obtrusive.success = function (mensagem, callback) {
+        matriz.box.notify.success(mensagem);
+//        matriz.box.obtrusive.default(mensagem, callback, "success");
+    };
+    matriz.box.obtrusive.warning = function (mensagem, callback) {
+        matriz.box.obtrusive.default(mensagem, callback, "warning");
+    };
+    //confirm
+    matriz.box.obtrusive.confirm = function (mensagem, confirm, reject) {
+        var type = 'warning';
+        matriz.box.notifications.remove();
+        $.pnotify({
+            text: mensagem + matriz.box.buttons.confirm,
+            type: type,
+            hide: false,
+            after_open: function (pnotify) {
+                $(pnotify[0]).find("button[data-matriz-action='confirm-callback']").focus();
+            },
+            before_open: function (pnotify) {
+                matriz.box.backdrop.show(pnotify);
+                matriz.box.notifications.append(pnotify);
+
+                $(pnotify[0]).find(".ui-pnotify-closer").hide();
+                $(pnotify[0]).find("button[data-matriz-action='confirm-close']").click(function () {
+                    pnotify.pnotify_remove();
+                    $(pnotify).remove();
+                    if (typeof reject === "function") {
+                        reject();
+                    }
+                });
+                $(pnotify[0]).find("button[data-matriz-action='confirm-callback']").click(function () {
+                    pnotify.pnotify_remove();
+                    if (typeof confirm === "function") {
+                        confirm();
+                    }
+                });
+            },
+            before_close: function () {
+                matriz.box.backdrop.hide();
+            }
+        });
+    };
+    //prompt
+    matriz.box.obtrusive.prompt = function (mensagem, callback) {
+        window.alert("Não implementado! Deve ser feito a partir da primeira necessidade.");
+    };
+
+    matriz.box.uniquemodal = {};
+
+    matriz.box.uniquemodal.create = function (options) {
+        $('#uniqueModal').remove();
+        $('.modal-backdrop').remove();
+
+        var modalUnique = '<div id="uniqueModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="uniqueModal" aria-hidden="true">\n\
+                                <div class="modal-dialog">\n\
+                                    <div class="modal-content">\n\
+                                        <div class="modal-header">\n\
+                                            <button type="button" class="close" data-dismiss="modal">\n\
+                                                <span aria-hidden="true">&times;</span><span class="sr-only">' + matriz.utils.internationalization.translate("Fechar", "matriz.global.box") + '</span>\n\
+                                            </button>\n\
+                                            <h4 class="modal-title"></h4>\n\
+                                        </div>\n\
+                                        <div class="modal-body"></div>\n\
+                                        <div class="modal-footer"></div>\n\
+                                    </div>\n\
+                                </div>\n\
+                            </div>';
+        $("body").append(modalUnique);
+
+        if (!options) {
+            options = matriz.box.uniquemodal.defaults;
+        } else {
+            if (options.titulo === undefined)
+                options.titulo = matriz.box.uniquemodal.defaults.titulo;
+            if (options.mensagem === undefined)
+                options.mensagem = matriz.box.uniquemodal.defaults.mensagem;
+            if (options.corContextual === undefined)
+                options.corContextual = matriz.box.uniquemodal.defaults.corContextual;
+            if (options.keyboard === undefined)
+                options.keyboard = matriz.box.uniquemodal.defaults.keyboard;
+        }
+
+        $('#uniqueModal').modal({backdrop: "static", show: false, keyboard: options.keyboard});
+
+        if (options.customClass) {
+            $('#uniqueModal').addClass(options.customClass);
+        }
+
+        $('#uniqueModal .modal-header .modal-title').html(options.titulo);
+        $('#uniqueModal .modal-body').html(options.mensagem);
+        $('#uniqueModal .modal-header').addClass("bg-" + options.corContextual);
+
+        if (options.buttons && options.buttons instanceof Array) {
+            if (options.buttons.length) {
+                options.buttons.forEach(function (element) {
+                    var $button = matriz.box.uniquemodal.createbutton(element);
+                    $('#uniqueModal .modal-footer').append($button);
+                });
+            } else {
+                $('#uniqueModal .modal-footer').remove();
+            }
+        } else {
+            var $button = matriz.box.uniquemodal.createbutton({
+                "attributes": {"class": "btn btn-default", "data-dismiss": "modal"},
+                "value": matriz.utils.internationalization.translate("Fechar", "matriz.global.box")
+            });
+            $('#uniqueModal .modal-footer').append($button);
+        }
+        $('#uniqueModal').modal("show");
+        $('#uniqueModal').on('hidden.bs.modal', function (e) {
+            $('#uniqueModal').remove();
+        });
+    };
+
+    matriz.box.uniquemodal.hide = function() {
+        $('#uniqueModal').modal("hide");
+    };
+
+    matriz.box.uniquemodal.createbutton = function (button) {
+        var $button = $('<button type="button">' + button.value + '</button>');
+        for (var key in button.attributes) {
+            $button.attr(key, button.attributes[key]);
+        }
+        if (button.callback) {
+            if (typeof button.callback === "function") {
+                $button.click(function () {
+                    button.callback();
+                });
+            }
+        }
+        return $button;
+    };
+
+    matriz.box.uniquemodal.defaults = {
+        titulo: "Atenção",
+        mensagem: "",
+        corContextual: "primary",
+        callback: null,
+        keyboard: true
+    };
+
+    //alias para as funções
+    matriz.alert = matriz.box.obtrusive.default;
+    matriz.confirm = matriz.box.obtrusive.confirm;
+    matriz.prompt = matriz.box.obtrusive.prompt;
+});

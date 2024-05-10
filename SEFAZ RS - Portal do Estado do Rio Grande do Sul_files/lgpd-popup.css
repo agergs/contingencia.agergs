@@ -1,0 +1,84 @@
+div#matriz2-cookie-confirmation.matriz2-cookie-notification-position-bottom {
+    border-bottom: 0;
+    bottom: 0;
+    top: auto;
+    box-shadow: 0 -1px 3px #eaf0f6;
+}
+
+div#matriz2-cookie-confirmation {
+    background: #fff;
+    height: auto;
+    left: 0;
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 100000000!important;
+    border-bottom: 1px solid #cbd6e2;
+    border-top: 1px solid #cbd6e2;
+    box-shadow: 0 1px 5px #eaf0f6;
+    color: #33475b;
+    font-family: inherit;
+    font-size: inherit;
+    font-weight: 400!important;
+    line-height: inherit;
+    text-align: left;
+    text-shadow: none!important;
+    font-size: 12px;
+    font-family: Helvetica Neue,Helvetica,Arial,sans-serif;
+    line-height: 18px;
+}
+
+div#matriz2-cookie-confirmation div#matriz2-cookie-confirmation-inner div#matriz2-cookie-confirmation-buttons-area {
+    margin: 10px 0 0!important;
+    text-align: center!important;
+}
+
+div#matriz2-cookie-confirmation * {
+    box-sizing: border-box!important;
+}
+
+div#matriz2-cookie-confirmation div#matriz2-cookie-confirmation-inner p {
+    margin: 0 0 12px;
+    color: #33475b;
+    font-family: inherit;
+    font-size: inherit;
+    font-weight: 400!important;
+    line-height: inherit;
+    text-align: left;
+    text-shadow: none!important;
+}
+
+div#matriz2-cookie-confirmation div#matriz2-cookie-confirmation-inner b {
+    font-weight: bold!important;
+    text-shadow: #000000;
+}
+
+div#matriz2-cookie-confirmation div#matriz2-cookie-confirmation-inner div#matriz2-cookie-policy-wording {
+    margin-bottom: 12px;
+}
+#matriz2-cookie-confirmation-buttons-area .btn {
+    display: block;
+    width: 100%;
+    white-space: normal;
+    margin-bottom: 12px;
+}
+#matriz2-cookie-confirmation-buttons-area .btn:last-child {
+    margin-bottom: 0;
+}
+@media screen and (min-width:768px) {
+    #matriz2-cookie-confirmation-buttons-area .btn {
+        display: inline-block;
+        width: auto;
+        margin: 0 12px 0 0;
+    }
+    #matriz2-cookie-confirmation-buttons-area .btn:last-child {
+        margin-right: 0;
+        }
+}
+
+div#matriz2-cookie-confirmation div#matriz2-cookie-confirmation-inner {
+    background: #fff;
+    margin: 0 auto;
+    max-width: 1000px;
+    padding: 20px;
+}

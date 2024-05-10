@@ -1,0 +1,99 @@
+$(function () {
+    /*
+     matriz.ui.init.datepicker();
+     matriz.ui.init.geolocation();
+     matriz.ui.init.mask();
+     matriz.ui.init.combobox();
+     matriz.ui.init.tabs();
+     matriz.ui.init.searchbox();
+     matriz.ui.loading.init();
+     */
+    matriz.ui.init.maxlength(".form-group textarea.form-control[maxlength]");
+    
+    /**
+     * Sobreecreve o plugin bootstrap select. Esta alteração foi feita para não 
+     * causar problemas de acessibilidade nos componentes select
+     * 
+     * @returns {$.fn}
+     */
+    $.fn.selectpicker = function() {
+        return this;
+    };
+
+    master = {
+        init: function () {
+            $(".defaultpagedlist.matriz-ui-pagedlist-container").each(function () {
+                $(this).matrizPagedList({
+                    callback: function () {
+                        if (this.recordCount > 0) {
+                            this.$container.find(".matriz-ui-pagedlist-pagination-header").show();
+                            this.$container.find(".matriz-ui-pagedlist-startitem").text(this.startitem);
+                            this.$container.find(".matriz-ui-pagedlist-enditem").text(this.enditem);
+                            this.$container.find(".matriz-ui-pagedlist-recordcount").text(this.recordCount);
+                            this.$container.find(".matriz-ui-pagedlist-recordcount").removeClass("hidden");
+                        } else {
+                            this.$container.find(".matriz-ui-pagedlist-pagination-header").hide();
+                        }
+                    }
+                });
+            });
+
+            //inicializa dynamic top
+            $('.containerDynamicTop').each(function () {
+                easingType = $(this).attr("data-easing");
+                scrollSpeed = eval($(this).attr("data-speed"));
+
+                var defaults = {
+                    text: matriz.utils.internationalization.translate("Ir para o topo", "master"),
+                    containerID: 'dynamicTop', // fading element id
+                    containerHoverID: 'dynamicTopHover', // fading element hover id
+                    scrollSpeed: scrollSpeed,
+                    easingType: easingType
+                };
+                $().UItoTop(defaults);
+            });
+
+            $("#formSeletorAlbumImagem, #formSeletorAlbumVideo").on("submit", function (event) {
+                event.preventDefault();
+
+                $album = $(this).find("select[name=Albuns]");
+                if ($album.val()) {
+                    location.href = $album.val();
+                }
+            });
+
+            $("a[download]").on("click", function () {
+                ga('set', 'anonymizeIp', true);
+                ga('send', 'event', 'arquivos', 'download', $(this).attr("title"));
+            });
+
+            matriz.common.events.on("matriz.media.player.play", function (player) {
+                var mediaInfo = player.getMediaInfo();
+                var type = player.type;
+                ga('send', 'event', type, 'play', mediaInfo.title);
+            });
+                        
+            var trackOutboundLink = function (url) {
+                ga('send', 'event', 'outbound', 'click', url, {
+                    'transport': 'beacon'
+                });
+            };
+            
+            $(".artigo__texto a[href]:not([href^='#'])").on("click", function(event) {
+                trackOutboundLink($(this).attr("href"));
+            });
+            
+            $('.pgwSlideshow').pgwSlideshow();
+        }
+    };
+    master.init();
+
+    //inicializa pagedlist padrões
+
+    var e;
+    e = '<a href="#conteudoInicio" accessKey="1">Ir para o conteúdo </a>';
+    e += '<a href="#menuInicio" accessKey="2">Ir para o menu </a>';
+    e += '<a href="#buscageralTextBox" accessKey="3">Ir para a busca </a>';
+
+    jQuery("<div/>").attr("class", "sr-only").html(e).prependTo(jQuery("body").eq(0));
+});

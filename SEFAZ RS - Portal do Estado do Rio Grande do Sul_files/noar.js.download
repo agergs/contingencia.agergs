@@ -1,0 +1,26 @@
+$(function () {
+    function agendaRefresh(intervalo) {
+        setTimeout(function() {
+            $.ajax("/_service/noar").done(function(data) {
+                
+                if (data.agora) {
+                    $(".programacao__noar .programacao__programa").text(data.agora.titulo);
+                } else {
+                    $(".programacao__noar .programacao__programa").text("");
+                }
+                
+                if (data.proximo) {
+                    $(".programacao__proximo .programacao__programa").text(data.proximo.titulo);
+                    agendaRefresh(parseInt(data.refresh));
+                } else {
+                    $(".programacao__proximo .programacao__programa").text("");
+                }
+                
+            });            
+        }, intervalo * 1000);
+    }
+    var refresh = $(".programacao__proximo").attr("data-refresh");
+    if (refresh && refresh.length > 0) {
+        agendaRefresh(parseInt(refresh));
+    }
+});
