@@ -95,7 +95,8 @@
   -webkit-transition: margin-top 0.5s, margin-bottom 0.5s;
   -o-transition: margin-top 0.5s, margin-bottom 0.5s;
   transition: margin-top 0.5s, margin-bottom 0.5s;
-  background-image: url(../images/logos/logo.svg);
+  /* background-image: url(../images/logos/logo.svg);*/
+  background-image: url(./logo.svg);
   background-repeat: no-repeat;
   margin-top: 5px;
   margin-bottom: 5px;
@@ -459,7 +460,8 @@
   -webkit-transition: width 0.5s;
   -o-transition: width 0.5s;
   transition: width 0.5s;
-  background-image: url(../images/logos/logo.svg);
+  /* background-image: url(../images/logos/logo.svg); */
+  background-image: url(./logo.svg);
   background-repeat: no-repeat;
   background-size: 278px 87px;
   /*tamanho logo em xs e sm*/
