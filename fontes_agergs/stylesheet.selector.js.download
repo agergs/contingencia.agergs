@@ -1,0 +1,86 @@
+
+StylesheetSelector = {
+    $enable: $('a[data-action="enable-alternate-style"]'),
+    $disable: $('a[data-action="disable-alternate-style"]')
+};
+
+StylesheetSelector.changeContraste = function (alternate) {
+    if (alternate) {
+        $("link[rel='alternate stylesheet']").prop('disabled', false);
+        $("link[rel='alternate stylesheet']").prop('disabled', true);
+        $("link[rel='alternate stylesheet']").prop('disabled', false);
+        $('#logo__secretarias-padrao').addClass("secretaria-contraste-on");
+        $('.wrapper__cabecalho__funcionalidades a.secretaria-vinculada').addClass("secretaria-contraste-on");
+    } else {
+        $("link[rel='alternate stylesheet']").prop('disabled', true);
+        $('#logo__secretarias-padrao').removeClass("secretaria-contraste-on");
+        $('.wrapper__cabecalho__funcionalidades a.secretaria-vinculada').removeClass("secretaria-contraste-on");
+    }
+}
+
+StylesheetSelector.init = function () {
+    this.$enable.on("click", function (e) {        
+        StylesheetSelector.createCookie("style.matriz.alternate", true, 365);
+        StylesheetSelector.changeButtons(true);
+        StylesheetSelector.changeContraste(true);
+        console.log('exibe alto contraste');
+    });
+
+    this.$disable.on("click", function (e) {        
+        StylesheetSelector.createCookie("style.matriz.alternate", false, 365);
+        StylesheetSelector.changeButtons(false);
+        StylesheetSelector.changeContraste(false);
+        console.log('exibe contraste normal');
+    });
+
+    var alternate = StylesheetSelector.readCookie("style.matriz.alternate");
+    alternate = (alternate === 'true');
+    StylesheetSelector.changeButtons(alternate);
+    StylesheetSelector.changeContraste(alternate);
+};
+
+StylesheetSelector.changeButtons = function (active) {
+    var value = "disabled";
+    if (active) {
+        this.$enable.hide();
+        this.$disable.show();
+        value = null;
+    } else {
+        this.$disable.hide();
+        this.$enable.show();
+    }
+};
+
+StylesheetSelector.createCookie = function (name, value, daes) {
+    if (daes) {
+        var date = new Date();
+        date.setTime(date.getTime() + (daes * 24 * 60 * 60 * 1000));
+        var expires = "; expires=" + date.toGMTString();
+    } else
+        expires = "";
+    document.cookie = name + "=" + value + expires + "; path=/";
+};
+
+StylesheetSelector.readCookie = function readCookie(name) {
+    var nameEQ = name + "=";
+    var ca = document.cookie.split(';');
+    for (var i = 0; i < ca.length; i++) {
+        var c = ca[i];
+        while (c.charAt(0) === ' ')
+            c = c.substring(1, c.length);
+        if (c.indexOf(nameEQ) === 0)
+            return c.substring(nameEQ.length, c.length);
+    }
+    return null;
+};
+
+StylesheetSelector.fast = function () {
+    var alternate = StylesheetSelector.readCookie("style.matriz.alternate");
+    alternate = (alternate === 'true');
+    StylesheetSelector.changeContraste(alternate);
+};
+StylesheetSelector.fast();
+
+window.addEventListener("load", function () {
+    StylesheetSelector.init();
+});

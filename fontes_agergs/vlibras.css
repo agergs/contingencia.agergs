@@ -1,0 +1,10 @@
+.vlibras.fechado {
+    top: 60% !important;
+    margin-top: 0 !important;
+}
+
+.vlibras.aberto {
+    top: inherit !important;
+    bottom: 0 !important;
+    margin-top: 0 !important;
+}

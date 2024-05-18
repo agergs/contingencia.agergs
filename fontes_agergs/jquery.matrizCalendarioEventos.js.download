@@ -1,0 +1,113 @@
+matriz.ui = matriz.ui || {};
+matriz.ui.CalendarioEventos = function (options) {
+    
+    var $calendario = $(options.datepicker.container);
+    
+    var eventos = [];
+
+    this.init = function () {
+        $calendario.datepicker({
+            todayHighlight: true,
+            format: matriz.utils.internationalization.translate("dd/mm/yyyy", "localization"),
+            language: $("html").attr("lang")
+        }).on("show render", function (e) {
+            atualizaEventos(e.date);
+        }).datepicker("show");
+    };
+    
+    function atualizaEventos(date) {
+        $calendario.addClass("disabled").removeClass("active");
+        
+        if (!eventos.length) {
+            var parametros = '';
+            if ($("#codigoExternoCalendarioEvento").length) {
+                parametros = '?codigoexterno=' + $("#codigoExternoCalendarioEvento").val();
+            }
+            matriz.utils.ajax({
+                url: "/_service/site/listevento" + parametros
+            }).done(function (response) {
+                eventos = response.itens;
+                redesenhaEventos(date);
+            });
+        } else {
+            redesenhaEventos(date);
+        }
+    }
+    
+    function redesenhaEventos(date) {
+        var dateNow = (new Date(date));
+        var dateOldMonth = (new Date(date)).addMonths(-1);
+        var dateNewMonth = (new Date(date)).addMonths(1);
+        
+        $calendario.find(".day").removeClass("active").each(function (dayIndex, dayElement) {
+            var $dayElement = $(dayElement);
+            var calendarioDate;
+
+            if ($dayElement.hasClass("old")) {
+                calendarioDate = dateOldMonth;
+            } else if ($dayElement.hasClass("new")) {
+                calendarioDate = dateNewMonth;
+            } else {
+                calendarioDate = dateNow;
+            }
+
+            calendarioDate.setDate(parseInt($dayElement.text()));
+
+            if (dataPossuiEvento(calendarioDate)) {
+                addLinkEvento($dayElement, calendarioDate);
+            } else {
+                $dayElement.addClass("disabled");
+            }
+        });
+    }
+    
+    function dataPossuiEvento(date) {
+        var calendarioDate = date.toLocaleDateString();
+
+        for (var eventoID in eventos) {
+            var evento = eventos[eventoID];
+            var eventoDate = new Date(evento.timestamp * 1000);
+
+            for (var dia = 0; dia <= evento.dias; dia++) {
+                if (eventoDate.toLocaleDateString() === calendarioDate) {
+                    return true;
+                }
+
+                eventoDate = eventoDate.addDays(1);
+            }
+        }
+
+        return false;
+    }
+
+    function addLinkEvento($element, date) {
+        var urlAmigavelConteudoPai = "eventos";
+        if ($("#urlAmigavelConteudoPai").length) {
+            urlAmigavelConteudoPai = $("#urlAmigavelConteudoPai").val();
+        }
+        $element.empty();
+        $element.addClass("day_event");
+        $("<a>")
+                .attr("href", "/" + urlAmigavelConteudoPai + "?datahoraini=".concat(encodeURIComponent(date.toLocaleDateString())).concat("&ordem=EVENTOSANTIGOS"))
+                .text(parseInt(date.getDate()))
+                .on("click", function (e) {
+                    e.stopPropagation();
+                    location.href = this.href;
+                    return false;
+                }).appendTo($element);
+    }
+};
+
+$.fn.matrizCalendarioEventos = function () {
+    if (this.length > 0) {
+        $(this).each(function (idx, container) {
+            var calendarioEventos = new matriz.ui.CalendarioEventos({
+                "datepicker": {
+                    "container": container
+                }
+            });
+            calendarioEventos.init();
+        });
+    }
+    return this;
+};

@@ -1,0 +1,27 @@
+$.fn.matrizMediaPlayer = function() {
+    let $pause = $(this).find('[data-matriz-action="pause"]');
+    let $volume = $(this).find('.matriz-ui-player-volume-controls');
+    let $seek = $(this).find('[data-matriz-action="seek"]');
+    let $container = $(this);
+    $volume.addClass('hidden');
+    $pause.addClass('hidden');
+    $seek.removeAttr('href');
+
+    if (arguments.length === 0) {
+        let $href = $("<a class='matriz-lgpd-url-fallback' href='#' target='_blank'></a>");
+        let $uri = $container.attr('data-matriz-player-uri');
+        if ($container.parent('.matriz-lgpd-url-fallback').length === 0) {
+            $container.after($href);
+            $href.append($container);
+        }
+        $href.attr('href', $uri);
+    } else if (arguments[0] === 'load'){
+        let $href = $(this).parent('.matriz-lgpd-url-fallback');
+        let $uri = arguments[1].uri;
+        $href.attr('href',$uri);
+    }
+    return this;
+};
+$.fn.matrizMediaPlaylist = function() {
+    return this;
+};

@@ -1,0 +1,286 @@
+window.matriz = window.matriz || {};
+
+var $ajax = $.ajax;
+matriz.csrf = {
+    "key": "X-NEO-CSRF-TOKEN",
+    "value": $("meta[name='csrf-token']").attr("content")
+}
+$.ajax = function() {
+    if (typeof arguments[0] === "object") {
+        if (!("headers" in arguments[0])) {
+            arguments[0].headers = {};
+        }
+        if (matriz.csrf.value) {
+            arguments[0].headers[matriz.csrf.key] = matriz.csrf.value;
+        }
+    }
+    return $ajax.apply(this, arguments);
+}
+
+$(function () {
+    matriz.global = {};
+    //O valor para matriz.global.version é definido no plugin clientScriptsPrepare (function.clientScriptsPrepare.php)
+    matriz.global.version = null;
+
+    //ajax
+    matriz.ajax = {};
+    matriz.ajax.aborted = function (error) {
+        var xhr = error.xhr || error;
+        return !xhr.getAllResponseHeaders();
+    };
+
+    matriz.ajax.messages = {};
+
+    matriz.ajax.messages.defaults = {};
+    matriz.ajax.messages.defaults.code401 = "Falha na execução do procedimento: Usuário não autenticado ou sessão encerrada.";
+    matriz.ajax.messages.defaults.code403 = "Falha na execução do procedimento: A credencial fornecida não possui acesso a esta operação.";
+    matriz.ajax.messages.defaults.code404 = "Falha na execução do procedimento: Endereço do recurso não encontrado.";
+    matriz.ajax.messages.defaults.code413 = "Falha na execução do procedimento: O tamanho do arquivo ultrapassa o limite aceito pelo servidor.";
+    matriz.ajax.messages.defaults.default = "Falha na execução do procedimento: Usuário não autenticado ou sessão encerrada.";
+    matriz.ajax.messages.defaults.code0 = "Não foi possível conectar ao serviço. Verifique a sua conexão com a internet.";
+    matriz.ajax.messages.defaults.fail = "Falha na execução do procedimento";
+
+    matriz.ajax.messages.fail = {};
+    matriz.ajax.messages.fail.code401 = function () {
+        matriz.box.obtrusive.danger(matriz.ajax.messages.defaults.code401, function () {
+            location.replace("/login?returnURI=".concat(encodeURIComponent(location.href)));
+        });
+    };
+    matriz.ajax.messages.fail.code403 = function () {
+        matriz.box.notify.danger(matriz.ajax.messages.defaults.code403);
+    };
+    matriz.ajax.messages.fail.code404 = function () {
+        matriz.box.notify.danger(matriz.ajax.messages.defaults.code404);
+    };
+    matriz.ajax.messages.fail.code413 = function () {
+        matriz.box.notify.danger(matriz.ajax.messages.defaults.code413);
+    };
+    matriz.ajax.messages.fail.default = function (error, textStatus, errorThrown, defaultMessage) {
+        var jqXHR = error.xhr || error;
+        switch (jqXHR.status) {
+            case 401:
+                matriz.ajax.messages.fail.code401();
+                break;
+            case 403:
+                matriz.ajax.messages.fail.code403();
+                break;
+            case 404:
+                matriz.ajax.messages.fail.code404();
+                break;
+            case 413:
+                matriz.ajax.messages.fail.code413();
+                break;
+            default:
+                if (!matriz.ajax.aborted(jqXHR)) {
+                    if (!defaultMessage) {
+                        defaultMessage = matriz.utils.internationalization.translate("Falha na execução do procedimento", "matriz.global");
+                    }
+                    matriz.box.notify.danger(defaultMessage + ": " + jqXHR.responseText);
+                }
+        }
+    };
+
+    matriz.ajax.uniquemodalmessage = {};
+    matriz.ajax.uniquemodalmessage.fail = {};
+    matriz.ajax.uniquemodalmessage.fail.code401 = function () {
+        matriz.box.obtrusive.danger(matriz.ajax.messages.defaults.code401, function () {
+            location.replace("/login");
+        });
+    };
+    matriz.ajax.uniquemodalmessage.fail.code403 = function () {
+        matriz.box.notify.danger(matriz.ajax.messages.defaults.code403);
+    };
+    matriz.ajax.uniquemodalmessage.fail.code404 = function () {
+        matriz.box.notify.danger(matriz.ajax.messages.defaults.code404);
+    };
+    matriz.ajax.uniquemodalmessage.fail.code413 = function () {
+        matriz.box.notify.danger(matriz.ajax.messages.defaults.code413);
+    };
+    matriz.ajax.uniquemodalmessage.fail.default = function (jqXHR, textStatus, errorThrown, defaultMessage) {
+        switch (jqXHR.status) {
+            case 401:
+                matriz.box.uniquemodal.create({
+                    titulo: "Falha na execução do procedimento",
+                    mensagem: '<p style="word-wrap:break-word;">' + matriz.ajax.messages.defaults.code401 + '</p>',
+                    corContextual: 'danger'
+                });
+                break;
+            case 403:
+                matriz.box.uniquemodal.create({
+                    titulo: "Falha na execução do procedimento",
+                    mensagem: '<p style="word-wrap:break-word;">' + matriz.ajax.messages.defaults.code403 + '</p>',
+                    corContextual: 'danger'
+                });
+                break;
+            case 404:
+                matriz.box.uniquemodal.create({
+                    titulo: "Falha na execução do procedimento",
+                    mensagem: '<p style="word-wrap:break-word;">' + matriz.ajax.messages.defaults.code404 + '</p>',
+                    corContextual: 'danger'
+                });
+                break;
+            case 413:
+                matriz.box.uniquemodal.create({
+                    titulo: "Falha na execução do procedimento",
+                    mensagem: '<p style="word-wrap:break-word;">' + matriz.ajax.messages.defaults.code413 + '</p>',
+                    corContextual: 'danger'
+                });
+                break;
+            default:
+                if (!matriz.ajax.aborted(jqXHR)) {
+                    if (!defaultMessage) {
+                        defaultMessage = "Falha na execução do procedimento";
+                    }
+                    matriz.box.uniquemodal.create({
+                        titulo: defaultMessage,
+                        mensagem: '<p style="word-wrap:break-word;">' + jqXHR.responseText + '</p>',
+                        corContextual: 'danger'
+                    });
+                }
+        }
+    };
+    matriz.ajax.uniquemodalmessage.fail.warn = function (jqXHR) {
+        var message = createMessageFromJqXHR(jqXHR);
+        matriz.box.uniquemodal.create({
+            titulo: "ATENÇÃO",
+            mensagem: '<p style="word-wrap:break-word;">' + message + '</p>',
+            corContextual: 'warning'
+        });
+    };
+
+    function createMessageFromJqXHR(jqXHR) {
+        var message = jqXHR.responseText;
+        if (!message) {
+            message = createMessageFromStatus(jqXHR);
+        }
+        return message;
+    }
+
+    function createMessageFromStatus(jqXHR) {
+        var message = matriz.ajax.messages.defaults.fail;
+        var codeKey = "code" + jqXHR.status;
+        if (codeKey in matriz.ajax.messages.defaults) {
+            message = matriz.ajax.messages.defaults[codeKey];
+        }
+        return matriz.utils.internationalization.translate(message, "matriz.global");
+    }
+
+    //funções relacionadas a elementos html
+    matriz.element = {};
+    matriz.element.exists = function (selector) {
+        return $(selector).length > 0;
+    };
+
+    matriz.geolocation = {};
+    matriz.geolocation.initialized = false;
+    matriz.geolocation.data = {};
+    matriz.geolocation.geocoder = {};
+
+    matriz.geolocation.init = function () {
+        if (!matriz.geolocation.initialized) {
+            matriz.geolocation.initialized = true;
+
+            matriz.common.events.on("matriz.externalapis.google.maps.ready", function () {
+                try {
+                    navigator.geolocation.getCurrentPosition(matriz.geolocation.geocoderGetAddress, matriz.geolocation.geocoderHandleError);
+                } catch (error) {
+                    matriz.common.events.trigger("matriz.geolocation.error", {
+                        "error": error
+                    });
+                }
+            });
+        }
+    };
+    matriz.geolocation.geocoderGetAddress = function (position) {
+        matriz.geolocation.data.latitude = position.coords.latitude;
+        matriz.geolocation.data.longitude = position.coords.longitude;
+        matriz.common.events.trigger("matriz.geolocation.ready", {
+            "position": position
+        });
+
+        var latlng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+        var pais = "";
+        var uf = "";
+        var cidade = "";
+        var bairro = "";
+        var logradouro = "";
+        var numero = "";
+        var cep = "";
+
+        matriz.geolocation.geocoder = new google.maps.Geocoder();
+        matriz.geolocation.geocoder.geocode({
+            'latLng': latlng
+        }, function (results, status) {
+            if (status === google.maps.GeocoderStatus.OK) {
+                if (results[1]) {
+                    for (var i = 0; i < results[0].address_components.length; i++) {
+                        for (var b = 0; b < results[0].address_components[i].types.length; b++) {
+
+                            switch (results[0].address_components[i].types[b]) {
+                                case "administrative_area_level_1":
+                                    uf = results[0].address_components[i];
+                                    break;
+                                case "locality":
+                                    cidade = results[0].address_components[i];
+                                    break;
+                                case "sublocality":
+                                    bairro = results[0].address_components[i];
+                                    break;
+                                case "postal_code":
+                                    cep = results[0].address_components[i];
+                                    break;
+                                case "street_number":
+                                    numero = results[0].address_components[i];
+                                    break;
+                                case "route":
+                                    logradouro = results[0].address_components[i];
+                                    break;
+                                case "country":
+                                    pais = results[0].address_components[i];
+                                    break;
+                            }
+                        }
+                    }
+
+                    matriz.geolocation.data.pais = {
+                        sigla: pais.short_name,
+                        nome: pais.long_name
+                    };
+                    matriz.geolocation.data.uf = {
+                        sigla: uf.short_name,
+                        nome: uf.long_name
+                    };
+
+                    matriz.geolocation.data.municipio = cidade.short_name;
+                    matriz.geolocation.data.bairro = bairro.long_name;
+                    matriz.geolocation.data.endereco = {
+                        logradouro: logradouro.long_name,
+                        numero: numero.long_name
+                    };
+                    matriz.geolocation.data.cep = cep.short_name;
+                }
+            }
+            matriz.ui.geolocation.init();
+        });
+    };
+    matriz.geolocation.geocoderHandleError = function (error) {
+        matriz.common.events.trigger("matriz.geolocation.error", {
+            "error": error
+        });
+        switch (error.code) {
+            case error.PERMISSION_DENIED:
+                console.log("Falha na geolocalização: Usuário negou o pedido de Geolocalização.");
+                break;
+            case error.POSITION_UNAVAILABLE:
+                console.log("Falha na geolocalização: Informações sobre a localização está indisponível.");
+                break;
+            case error.TIMEOUT:
+                console.log("Falha na geolocalização: O pedido para obter a localização do usuário expirou.");
+                break;
+            case error.UNKNOWN_ERROR:
+                console.log("Falha na geolocalização: Ocorreu um erro desconhecido.");
+                break;
+        }
+    };
+
+});

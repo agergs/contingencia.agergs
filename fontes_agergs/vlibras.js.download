@@ -1,0 +1,15 @@
+if (window.innerWidth >= $(".vlibras").attr("data-matriz-min-screen-width")) {
+    new window.VLibras.Widget('https://vlibras.gov.br/app');
+}
+
+let vlibras = $('.vlibras');
+
+vlibras.on("click", "img.access-button", function () {
+    vlibras.removeClass("fechado");
+    vlibras.addClass("aberto");
+});
+
+vlibras.on("click", ".vpw-settings-btn-close", function () {
+    vlibras.removeClass("aberto");
+    vlibras.addClass("fechado");
+});

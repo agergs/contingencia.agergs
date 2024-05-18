@@ -1,0 +1,64 @@
+$.fn.matrizPagedList = function(command, options) {
+    if (this.length > 0) {
+        if (!options) {
+            options = {};
+        }
+        
+        if (command instanceof Object) {
+            options = command;
+            command = "";
+        }
+        
+        switch (command) {
+            case "destroy":
+                this.get(0).instance = undefined;
+                break;
+            case "reset":
+                this.get(0).instance.reset();
+                break;
+            case "next":
+                this.get(0).instance.next();
+                break;
+            case "previous":
+                this.get(0).instance.previous();
+                break;
+            case "sort":
+                this.get(0).instance.sort(options.column, options.direction);
+                break;
+            case "pagenumber":
+                return this.get(0).instance.pageNumber();
+            case "pageitenscount":
+                return this.get(0).instance.pageItensCount();
+            case "pagecount":
+                return this.get(0).instance.pageCount();
+            case "isloading":
+                return this.get(0).instance.isLoading();
+            case "filter":
+                this.get(0).instance.filter(options);
+                break;
+            case "refresh":
+                this.get(0).instance.refresh();
+                break;
+            case "navigate":
+                this.get(0).instance.navigate(options);
+                break;
+            case "goto":
+                this.get(0).instance.goto(options);
+                break;
+            case "reinit":
+                this.get(0).instance.reinit();
+                break;
+            case "instance":
+                return this.get(0).instance;
+            default:
+                if (!this.get(0).instance) {
+                    var $container = $(this);
+                    this.get(0).instance = matriz.ui.list.create($container.attr("data-matriz-list-type"), $container, options);
+                    this.get(0).instance.initialize();
+                }
+                break;
+        }
+    }
+    return this;
+};
+

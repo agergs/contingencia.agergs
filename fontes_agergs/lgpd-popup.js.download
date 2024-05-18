@@ -1,0 +1,37 @@
+
+window.addEventListener("DOMContentLoaded", function() {
+    popupConsentimento($, LGPDAgreementManager());
+});
+
+function popupConsentimento($, lgpdAgreementManager) {
+
+    if(lgpdAgreementManager.isPending()) {
+        inicializaPopup($);
+    }
+
+    function inicializaPopup($) {
+        $("#matriz2-cookie-confirmation").removeClass("hidden");
+        $("#matriz2-cookie-confirmation-button").on("click", function(){consenteCookies("aceito")});
+        $("#matriz2-cookie-confirmation-basic-button").on("click", function(){consenteCookies("basico")});
+    }
+
+    function fechaPopup() {
+        $("#matriz2-cookie-confirmation").hide();
+    }
+
+    function consenteCookies(acao) {
+        lgpdAgreementManager.salvaConsentimento(acao)
+            .fail(erroAoEfetuarConsentimento)
+            .done(sucessoAoSalvarConsentimento);
+    }
+
+    function erroAoEfetuarConsentimento(xhr) {
+        matriz.box.notify.warning(xhr.responseText);
+    }
+
+    function sucessoAoSalvarConsentimento(resposta) {
+        window.location.reload(true);
+        $("#matriz2-cookie-confirmation").hide();
+    }
+
+}
